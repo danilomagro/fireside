@@ -9,11 +9,12 @@ local MinimapButton = ns.Minimap
 -- Angles are maths-style: 0 is three o'clock and they grow anticlockwise, so
 -- the default of 180 puts the button at nine o'clock, on the ring.
 local DEFAULT_ANGLE = 180
--- The Camp Tent's own icon: says "camp" without being a fire, which Campfire
--- Tales already uses on the minimap. Read from the item, so it is whatever
--- this client ships; the fire is only the fallback.
-local ICON_ITEM = 279978
-local ICON_FALLBACK = "Interface/Icons/Spell_Fire_Fire"
+-- A canvas tent: says "camp" without being a fire, which Campfire Tales already
+-- uses on the minimap. inv_10_tailoring2_tent_color1, by file id. The Camp
+-- Tent item itself still carries a placeholder leather icon on the beta.
+-- Forever ships Retail's icon files (its Spinning Wheel and Sewing Machine
+-- use Dragonflight art), so this one is there too.
+local ICON = 4624629
 
 local function GetMinimapFrameRadius()
     local width = (Minimap and Minimap:GetWidth()) or 140
@@ -54,7 +55,7 @@ function MinimapButton:Initialize()
 
     local icon = btn:CreateTexture(nil, "BACKGROUND")
     icon:SetSize(20, 20)
-    icon:SetTexture(ns.API.GetItemIcon(ICON_ITEM) or ICON_FALLBACK)
+    icon:SetTexture(ICON)
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     icon:SetPoint("CENTER", 0, 1)
     btn.icon = icon
