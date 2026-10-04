@@ -238,61 +238,18 @@ function UI:NoteCastStarted()
     self.lastCastAt = GetTime()
 end
 
--- Placing is a plain item use, the same thing an action bar button does, so it
--- should survive every restriction. "should" is not "does", so it gets the same
--- treatment as crafting: two routes and a log entry either way.
--- "item:12345" is a link fragment, and neither UseItemByName nor /use resolves
--- it, which is why the first attempts consumed nothing and raised nothing. The
--- forms below are the ones the secure code documents: an item name, a bag and
--- slot pair, and a /use macro by name.
-local PLACE_MODES = { "name", "bagslot", "macro" }
-UI.placeMode = 1
+-- Placing is a plain item use, as an action bar button does it, addressed by
+-- the item name ("item:12345" is a link fragment that neither the secure item
+-- attribute nor /use resolves). Many camp objects then ask for a spot on the
+-- ground, so the item only leaves the bags after a second click in the world.
+-- The check below therefore waits a while and only records what happened.
+local PLACE_CHECK_DELAY = 15
 
--- Where the object actually sits in your bags, for the "bag slot" form.
-function UI:FindInBags(itemID)
-    if not (itemID and C_Container and C_Container.GetContainerNumSlots) then
-        return nil
-    end
-    for bag = 0, (NUM_BAG_SLOTS or 4) do
-        for slot = 1, (C_Container.GetContainerNumSlots(bag) or 0) do
-            if C_Container.GetContainerItemID(bag, slot) == itemID then
-                return bag, slot
-            end
-        end
-    end
-    return nil
-end
-
-function UI:CurrentPlaceMode()
-    return PLACE_MODES[self.placeMode] or "item"
-end
-
-function UI:AdvancePlaceMode(from)
-    if from and self:CurrentPlaceMode() ~= from then
-        return
-    end
-    if self.placeMode < #PLACE_MODES then
-        self.placeMode = self.placeMode + 1
-        ns.Print("Place route " .. ns.Accent(PLACE_MODES[self.placeMode - 1]) .. " did nothing - switching to "
-            .. ns.Accent(self:CurrentPlaceMode()) .. ". Click again.")
-        self:Refresh()
-    end
-end
-
--- Did the click actually consume the object? The count in your bags is the only
--- answer the server gives us.
-function UI:VerifyPlacement(entry, before, mode)
-    C_Timer.After(1.5, function()
+function UI:VerifyPlacement(entry, before)
+    C_Timer.After(PLACE_CHECK_DELAY, function()
         local after = entry.itemID and ns.API.GetItemCount(entry.itemID) or before
-        if after < before then
-            ns.Probe:LogCraftAttempt(entry, "placed", "route: " .. mode)
-            self.workingPlaceMode = mode
-        else
-            local bag, slot = self:FindInBags(entry.itemID)
-            ns.Probe:LogCraftAttempt(entry, "place-nothing", ("route: %s, still %d in bags, name %q, bag %s slot %s"):format(
-                mode, after, tostring(entry.itemName), tostring(bag), tostring(slot)))
-            self:AdvancePlaceMode(mode)
-        end
+        ns.Probe:LogCraftAttempt(entry, after < before and "placed" or "not-placed",
+            ("%d in bags before, %d after %d s"):format(before, after, PLACE_CHECK_DELAY))
         self:Refresh()
     end)
 end
@@ -410,7 +367,7 @@ function UI:GetButton(index)
         end
 
         if info.status == "place" then
-            UI:VerifyPlacement(info.entry, info.count, UI:CurrentPlaceMode())
+            UI:VerifyPlacement(info.entry, info.count)
             return
         end
 
@@ -445,25 +402,9 @@ local function ApplySecureAction(button, info)
         if entry.itemID then
             local name = entry.itemName or ns.API.GetItemName(entry.itemID) or entry.name
             entry.itemName = name
-            local mode = UI:CurrentPlaceMode()
-
-            if mode == "bagslot" then
-                local bag, slot = UI:FindInBags(entry.itemID)
-                if bag then
-                    button:SetAttribute("type", "item")
-                    button:SetAttribute("item", bag .. " " .. slot)
-                    button:SetAttribute("macrotext", nil)
-                    return
-                end
-            elseif mode == "macro" then
-                button:SetAttribute("type", "macro")
-                button:SetAttribute("macrotext", "/use " .. name)
-                button:SetAttribute("item", nil)
-                return
-            end
-
             button:SetAttribute("type", "item")
             button:SetAttribute("item", name)
+            button:SetAttribute("spell", nil)
             button:SetAttribute("macrotext", nil)
             return
         end

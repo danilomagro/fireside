@@ -94,7 +94,6 @@ function Probe:Capture()
     snapshot.useKeyDown = ns.API.UseKeyDown()
     snapshot.spellBook = ns.API.DumpSpellBook()
     snapshot.tradeSkillOpen = ns.UI:IsTradeSkillOpen()
-    snapshot.workingPlaceRoute = ns.UI.workingPlaceMode
 
     for _, entry in ipairs(ns.Data.objects) do
         local info = ns.State:Get(entry)
