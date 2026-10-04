@@ -169,6 +169,27 @@ function API.GetKnownProfessions()
     return names, true, lines
 end
 
+-- The player's own name for a profession, in the client's language, by skill
+-- line: "/cast <that name>" is how a macro opens the profession window.
+function API.GetProfessionNameBySkillLine(skillLine)
+    if not (skillLine and GetProfessions and GetProfessionInfo) then
+        return nil
+    end
+    local ok, a, b, arch, fishing, cooking, firstAid = pcall(GetProfessions)
+    if not ok then
+        return nil
+    end
+    for _, index in ipairs({ a, b, arch, fishing, cooking, firstAid }) do
+        if index then
+            local ok2, name, _, _, _, _, _, line = pcall(GetProfessionInfo, index)
+            if ok2 and line == skillLine then
+                return name
+            end
+        end
+    end
+    return nil
+end
+
 -- Whether a catalog entry belongs to one of the player's professions.
 function API.HasProfession(entry, names, lines)
     if entry.skillLine and next(lines) then

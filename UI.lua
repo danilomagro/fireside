@@ -410,9 +410,20 @@ function UI:GetButton(index)
             -- Still inside the click: this is the hardware event CraftRecipe wants.
             UI:CraftNow(entry, "postclick, window open")
         else
-            ns.Probe:LogCraftAttempt(entry, "needs-window", entry.profession)
-            ns.Print("Open your " .. ns.Accent(entry.profession) .. " window, then click "
-                .. ns.Accent(entry.name) .. " again to craft it.")
+            -- The secure action has just tried to open the profession; say
+            -- what happened rather than what should have.
+            ns.Probe:LogCraftAttempt(entry, "open-profession", entry.profession)
+            C_Timer.After(1, function()
+                if UI:IsTradeSkillOpen() then
+                    ns.Probe:LogCraftAttempt(entry, "profession-opened", entry.profession)
+                    ns.Print(ns.Accent(entry.profession) .. " is open - click "
+                        .. ns.Accent(entry.itemName or entry.name) .. " again to craft it.")
+                else
+                    ns.Probe:LogCraftAttempt(entry, "profession-not-opened", entry.profession)
+                    ns.Print("Open your " .. ns.Accent(entry.profession) .. " window, then click "
+                        .. ns.Accent(entry.itemName or entry.name) .. " again to craft it.")
+                end
+            end)
         end
     end)
 
@@ -442,15 +453,23 @@ local function ApplySecureAction(button, info)
             return
         end
     elseif info.status == "craft" and not UI:IsTradeSkillOpen() then
-        -- Window closed: if the spellbook exposes a spell that opens this
-        -- profession (only Cooking does on the beta), the click casts it.
-        -- Otherwise PostClick just says which window to open.
+        -- Window closed: the click opens the profession, as a "/cast First Aid"
+        -- macro would, using the client's own name for it. The craft is the
+        -- next click, once the window is up. (An earlier test said this did
+        -- not work, but it ran while the button ignored every click.)
         local opener = ns.API.GetProfessionSpells()[string.lower(entry.profession)]
+        local localName = ns.API.GetProfessionNameBySkillLine(entry.skillLine)
         if opener and opener.spellID then
             button:SetAttribute("type", "spell")
             button:SetAttribute("spell", opener.spellID)
             button:SetAttribute("item", nil)
             button:SetAttribute("macrotext", nil)
+            return
+        elseif localName then
+            button:SetAttribute("type", "macro")
+            button:SetAttribute("macrotext", "/cast " .. localName)
+            button:SetAttribute("item", nil)
+            button:SetAttribute("spell", nil)
             return
         end
     end
