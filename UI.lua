@@ -75,6 +75,16 @@ function UI:Initialize()
     footer:SetJustifyH("LEFT")
     f.footer = footer
 
+    -- Esc closes the panel like any other game window (bags, character
+    -- sheet): the game's own Esc handler hides every frame on this list
+    -- before it opens the game menu.
+    if UISpecialFrames then
+        table.insert(UISpecialFrames, "FiresidePanel")
+    end
+    f:SetScript("OnHide", function()
+        UI.autoShown = nil
+    end)
+
     self.frame = f
     self.buttons = {}
     self.labels = {}
