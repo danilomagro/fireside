@@ -51,7 +51,7 @@ Click a gold icon with that profession's window open and it crafts. The client o
 | `/fire lock`, `/fire resetpos` | Lock the panel, reset panel and minimap button positions |
 | `/fire log on\|off` | Record what Fireside sees, for bug reports (see below) |
 
-`/fireside` works too.
+`/fireside` works too. Shift-click the minimap button to reload the UI.
 
 ## Known limitations
 
