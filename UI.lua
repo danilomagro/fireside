@@ -371,6 +371,11 @@ function UI:GetButton(index)
             return
         end
 
+        if info.status == "carry" then
+            ns.Print(info.hint or "No campfire nearby - light one or find one first.")
+            return
+        end
+
         if info.status ~= "craft" then
             return
         end
@@ -398,7 +403,10 @@ local function ApplySecureAction(button, info)
     button.pendingUpdate = nil
 
     local entry = info.entry
-    if info.status == "place" or info.status == "carry" then
+    -- Only "place" gets an item action. "carry" means we know there is no fire
+    -- (or, for a kit, that one is too close): using the item would only start
+    -- a placement the game then drops without a word, so PostClick explains.
+    if info.status == "place" then
         if entry.itemID then
             local name = entry.itemName or ns.API.GetItemName(entry.itemID) or entry.name
             entry.itemName = name
