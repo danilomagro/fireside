@@ -14,8 +14,10 @@ Data.CAMP_BENEFITS_ID = 1229741
 Data.CAMP_BENEFITS = "Camp Benefits"
 
 -- The 60 second wait before the benefits land. Its tooltip is generic: it
--- never says which objects are coming, only that something is.
-Data.WELCOMING_CAMPFIRE_ID = 1229739
+-- never says which objects are coming, only that something is. Player fires
+-- give 1229739; ambient fires in the world (questgivers, NPC camps) give
+-- 1289723 - an id spotted in the Campfire Tales addon, to verify in game.
+Data.WELCOMING_CAMPFIRE_IDS = { 1229739, 1289723 }
 
 -- Reagent item IDs are the Classic ones. ResolveIDs() checks each resolved name
 -- against the expected name and falls back to matching bag items by name when

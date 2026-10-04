@@ -72,7 +72,7 @@ Releases are built by the BigWigs packager on every version tag (`.github/workfl
 The beta is a Mainline (retail) API client wearing a Classic game, and several things are broken in ways that shaped this addon. Measured on build 1.60.1.69913:
 
 - **`GetItemInfo` / `GetSpellInfo` / `GetNumSkillLines` are gone.** Everything goes through `C_Item` / `C_Spell`, isolated in `Compat.lua`.
-- **There is no camping API at all.** The only trace of what a campsite holds is on your own auras: `Campfire Nearby` (1283391) while in range, `Welcoming Campfire` (1229739) for the 60 s wait - its tooltip is generic and never names the objects - and then a single `Camp Benefits` aura (1229741) whose tooltip lists every object on one line, separated by `\r\n`.
+- **There is no camping API at all.** The only trace of what a campsite holds is on your own auras: `Campfire Nearby` (1283391) while in range, `Welcoming Campfire` (1229739 at player fires; 1289723 at ambient fires, per the Campfire Tales addon) for the 60 s wait - its tooltip is generic and never names the objects - and then a single `Camp Benefits` aura (1229741) whose tooltip lists every object on one line, separated by `\r\n`.
 - **Secure snippets do not compile** (`loadstring_untainted` is missing). The panel only uses plain secure buttons with attributes set out of combat.
 - **Registering an unknown event throws and aborts the file**, so every registration is wrapped.
 - **Some values are secret** and must not be compared or used in arithmetic. Cooldown and aura reads are guarded and fall back to "unknown" rather than guessing.

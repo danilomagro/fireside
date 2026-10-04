@@ -193,15 +193,16 @@ function Auras:WelcomingSecondsLeft()
     if not (C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID) then
         return nil
     end
-    local ok, data = pcall(C_UnitAuras.GetPlayerAuraBySpellID, ns.Data.WELCOMING_CAMPFIRE_ID)
-    if not ok or type(data) ~= "table" then
-        return nil
+    for _, auraID in ipairs(ns.Data.WELCOMING_CAMPFIRE_IDS) do
+        local ok, data = pcall(C_UnitAuras.GetPlayerAuraBySpellID, auraID)
+        if ok and type(data) == "table" then
+            local expires = data.expirationTime
+            if expires and not ns.IsSecret(expires) and expires > 0 then
+                return math.max(0, math.ceil(expires - GetTime()))
+            end
+        end
     end
-    local expires = data.expirationTime
-    if not expires or ns.IsSecret(expires) or expires <= 0 then
-        return nil
-    end
-    return math.max(0, math.ceil(expires - GetTime()))
+    return nil
 end
 
 -- Two different things can be read off your own buffs, and they must not be
