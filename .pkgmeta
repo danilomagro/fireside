@@ -2,6 +2,7 @@ package-as: Fireside
 
 ignore:
   - .github
+  - assets
   - .gitignore
   - .pkgmeta
   - README.md

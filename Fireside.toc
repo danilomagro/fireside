@@ -4,6 +4,7 @@
 ## Author: Azareus
 ## Version: 0.1.0
 ## SavedVariables: FiresideDB
+## X-Curse-Project-ID: 1726135
 
 Core.lua
 Compat.lua

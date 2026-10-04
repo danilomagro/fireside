@@ -2,7 +2,7 @@
 
 > Your WoW: Forever camping objects at a glance: what you can craft, what you are missing, and a minimap alert when a campfire is near.
 
-**Status: 0.1.0 beta, built and tested on the Forever beta (client 1.60.1, interface 16001).**
+**Status: 0.1.0 beta, built and tested on the Forever beta (client 1.60.1, interface 16001).** On CurseForge as [Fireside Camp](https://www.curseforge.com/wow/addons/fireside-camp).
 
 ---
 
