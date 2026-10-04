@@ -222,7 +222,7 @@ local function BuildTooltip(button)
     end
 
     GameTooltip:AddLine(" ")
-    GameTooltip:AddLine(STATUS_HINT[info.status] or "", 0.6, 0.8, 1)
+    GameTooltip:AddLine(info.hint or STATUS_HINT[info.status] or "", 0.6, 0.8, 1)
     if info.status == "place" and info.fireNearby == nil then
         GameTooltip:AddLine("(cannot read the Campfire Nearby buff on this client)", 0.5, 0.5, 0.5)
     end
@@ -551,7 +551,14 @@ function UI:Refresh()
                 button:SetAlpha(1)
             end
 
-            if info.status == "place" then
+            if info.status == "place" and info.entry.isFire then
+                -- A campfire kit can be lit almost anywhere: steady green, so
+                -- it does not pulse for the whole journey.
+                button.pulse:Stop()
+                button.glow:SetVertexColor(0.3, 1, 0.35)
+                button.glow:SetAlpha(0.85)
+                button.glow:Show()
+            elseif info.status == "place" then
                 button.glow:SetVertexColor(0.3, 1, 0.35)
                 button.glow:SetAlpha(1)
                 button.glow:Show()

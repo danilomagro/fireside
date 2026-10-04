@@ -49,6 +49,16 @@ function State:Get(entry)
     if info.count > 0 then
         if info.cooldownStart then
             info.status = "cooldown"
+        elseif entry.isFire then
+            -- A campfire kit is the other way round: it lights its own camp,
+            -- and the game refuses it within 100 yards of an existing fire.
+            if info.fireNearby == true then
+                info.status = "carry"
+                info.hint = "A campfire is already nearby - fires need about 100 yards between them"
+            else
+                info.status = "place"
+                info.hint = "Click to light a campfire here"
+            end
         elseif info.fireNearby == false then
             info.status = "carry"
         else

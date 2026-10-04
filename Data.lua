@@ -144,6 +144,7 @@ Data.objects = {
     },
     {
         key = "basic_campfire", name = "Basic Campfire Kit", profession = "Cooking", tier = 1, skill = 1,
+        isFire = true, -- lights a campsite instead of needing one
         aliases = { "Basic Campfire" }, -- the recipe is the fire, the item is the kit
         -- Tools are required but not consumed, so they never show up in the
         -- reagent list the client gives us.
@@ -177,8 +178,8 @@ Data.objects = {
     { key = "plague_doctors_laboratory", name = "Plague Doctor's Laboratory", profession = "First Aid", tier = 3, skill = 300, verified = false },
     { key = "fishing_rack", name = "Fishing Rack", profession = "Fishing", tier = 2, skill = 140, verified = false },
     { key = "fishing_hut", name = "Fishing Hut", profession = "Fishing", tier = 3, skill = 300, verified = false },
-    { key = "journeyman_campfire", name = "Journeyman Campfire", profession = "Cooking", tier = 2, skill = 140, verified = false },
-    { key = "expert_campfire", name = "Expert Campfire", profession = "Cooking", tier = 3, skill = 220, verified = false },
+    { key = "journeyman_campfire", isFire = true, name = "Journeyman Campfire", profession = "Cooking", tier = 2, skill = 140, verified = false },
+    { key = "expert_campfire", isFire = true, name = "Expert Campfire", profession = "Cooking", tier = 3, skill = 220, verified = false },
     { key = "iron_oven", name = "Iron Oven", profession = "Cooking", tier = 4, skill = 300, verified = false },
 }
 
