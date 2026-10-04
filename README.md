@@ -33,11 +33,11 @@ The tooltip of every object lists its materials as **have / need**, the tool it 
 
 ### Placing at the fire
 
-Click a green icon and pick the spot on the ground: the object goes up next to the fire. A campfire kit works the same way to light a new camp. Away from a fire - or, for a kit, too close to one - the click tells you why instead of starting a placement the game would drop.
+Click a green icon and pick the spot on the ground: the object goes up next to the fire. A campfire kit works the same way to light a new camp. The game reports a campfire from about 100 yards away, much farther than you can place from, so walk up to the fire before you click. With no fire at all - or, for a kit, too close to one - the click tells you why instead of starting a placement the game would drop.
 
 ### Crafting from the panel
 
-Click a gold icon with that profession's window open and it crafts. The client only allows a craft inside a real click with the profession window open, and does not let addons open that window, so the panel tells you which one to open when it is closed.
+Click a gold icon and it crafts. Right-click any icon to craft another, even one you already carry. If that profession's window is closed, the same click opens it and crafts. `Esc` closes the panel.
 
 ## Commands
 
@@ -101,8 +101,9 @@ The beta is a Mainline (retail) API client wearing a Classic game, and several t
 | `C_TradeSkillUI.OpenRecipe` | **protected** - fires `ADDON_ACTION_BLOCKED` |
 | `C_TradeSkillUI.CraftRecipe` from a timer or event | accepted silently, crafts nothing |
 | `C_TradeSkillUI.CraftRecipe` inside the click, profession window open | **works** |
+| Secure button, `/cast <profession name>`, then `CraftRecipe` in its PostClick | **works** - the window opens before PostClick runs, so one click opens and crafts |
 
-An addon cannot open a profession window either: a full spellbook dump returns only class and racial spells, with no profession entry to cast (only Cooking answers, through `GetProfessionInfo`).
+A full spellbook dump returns only class and racial spells, with no profession entry to cast (only Cooking answers, through `GetProfessionInfo`), but a `/cast` macro with the profession's localized name - read from `GetProfessionInfo` by skill line - opens its window.
 
 Also measured:
 
@@ -115,11 +116,7 @@ Also measured:
 
 ## Changelog
 
-### 0.1.0
-- First release: camping objects panel, one row per profession, crafting from the panel, materials and tools in the tooltip
-- Minimap button that pulses and chimes when a campfire is in range
-- Welcoming Campfire countdown and Camp Benefits read-out
-- Recipe ids harvested from a live beta client
+See [CHANGELOG.md](CHANGELOG.md). The release workflow publishes it as the CurseForge changelog of each file.
 
 ---
 

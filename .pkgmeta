@@ -7,3 +7,7 @@ ignore:
   - .pkgmeta
   - README.md
   - scripts
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown

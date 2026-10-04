@@ -8,6 +8,9 @@
 # never mix the two within the Forever flavor: a single Release file would
 # take precedence over newer Betas for users on default app settings.
 #
+# Before tagging, update CHANGELOG.md: .pkgmeta hands it to CurseForge as the
+# file's changelog, in place of a list of commit messages.
+#
 # Tags have no "v" so the CurseForge file is named "Fireside-0.1.0-beta1". The
 # packager turns anything but letters, digits and . _ ! - into "_", spaces
 # included, so the label cannot read "Fireside 0.1.0-beta1".
