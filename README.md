@@ -65,7 +65,7 @@ Then `/reload` in game: `ReloadUI()` is protected on this client, so addon reloa
 
 `/fire debug on` turns on the diagnostics used to build this addon: a probe of the client API, a log of every craft and placement attempt, a harvest of recipes and auras, and a copy of Lua errors - all written to `FiresideDB` on logout. `scripts/bake_harvest.py` turns a harvest into `Harvested.lua`.
 
-Releases are built by the BigWigs packager on every `v*` tag (`.github/workflows/release.yml`).
+Releases are built by the BigWigs packager on every version tag such as `0.1.0` (`.github/workflows/release.yml`).
 
 ## Notes on the Forever client
 
