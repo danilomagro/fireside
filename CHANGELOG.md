@@ -1,6 +1,6 @@
 # Fireside changelog
 
-## 0.1.0-beta2 (not released yet)
+## 0.1.0-beta2
 - Right-click any object to craft another, even one you already carry.
 - Crafting no longer needs the profession window open: if it is closed, the click opens it and crafts in one go.
 - `Esc` closes the panel like any other game window.
