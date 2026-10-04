@@ -1,0 +1,16 @@
+## Interface: 16001
+## Title: Fireside
+## Notes: Your camping objects at a glance: what you can craft, what you are missing, and a minimap alert when a campfire is near.
+## Author: Azareus
+## Version: 0.1.0
+## SavedVariables: FiresideDB
+
+Core.lua
+Compat.lua
+Data.lua
+Harvested.lua
+State.lua
+Auras.lua
+UI.lua
+Minimap.lua
+Probe.lua

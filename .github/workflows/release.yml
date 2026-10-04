@@ -1,0 +1,32 @@
+# Packages the addon and publishes it whenever a version tag is pushed:
+#   git tag v0.1.0 && git push origin v0.1.0
+#
+# The BigWigs packager reads the game version from "## Interface: 16001" in
+# Fireside.toc, which it maps to the WoW Forever flavor on CurseForge.
+# Uploading to CurseForge needs two things, both set up once by hand:
+#   - "## X-Curse-Project-ID: <id>" in Fireside.toc
+#   - a CF_API_KEY repository secret (Settings > Secrets and variables > Actions)
+# Without them the job still builds the zip and attaches it to a GitHub release.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: BigWigsMods/packager@v2
