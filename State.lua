@@ -26,7 +26,7 @@ function State:Get(entry)
         local need = r.count or 1
         r.have = have
         if have < need then
-            table.insert(info.missing, { name = r.name, have = have, need = need, itemID = r.itemID })
+            table.insert(info.missing, { name = r.localName or r.name, have = have, need = need, itemID = r.itemID })
         end
     end
 
@@ -78,11 +78,11 @@ end
 -- Objects worth drawing for this character, in panel order.
 function State:GetVisibleObjects()
     local settings = ns.db.settings
-    local professions, detected = ns.API.GetKnownProfessions()
+    local names, detected, lines = ns.API.GetKnownProfessions()
     local list = {}
 
     for _, entry in ipairs(ns.Data.objects) do
-        local mine = (not detected) or settings.showAll or professions[string.lower(entry.profession)]
+        local mine = (not detected) or settings.showAll or ns.API.HasProfession(entry, names, lines)
         local info = self:Get(entry)
         local show = mine and (settings.showUnknown or info.status ~= "unknown")
         if show then
@@ -107,7 +107,7 @@ end
 -- The same objects, one row per profession and tiers left to right: a flat grid
 -- of 30-odd icons is unreadable, a row per trade is not.
 function State:GetGroupedObjects()
-    local professions, detected = ns.API.GetKnownProfessions()
+    local names, detected, lines = ns.API.GetKnownProfessions()
     local groups, order = {}, {}
 
     for _, info in ipairs(self:GetVisibleObjects()) do
@@ -115,7 +115,7 @@ function State:GetGroupedObjects()
         if not groups[profession] then
             groups[profession] = {
                 profession = profession,
-                mine = (not detected) or professions[string.lower(profession)] or false,
+                mine = (not detected) or ns.API.HasProfession(info.entry, names, lines),
                 items = {},
             }
             table.insert(order, groups[profession])

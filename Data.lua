@@ -19,29 +19,22 @@ Data.CAMP_BENEFITS = "Camp Benefits"
 -- 1289723 - an id spotted in the Campfire Tales addon, to verify in game.
 Data.WELCOMING_CAMPFIRE_IDS = { 1229739, 1289723 }
 
--- Reagent item IDs are the Classic ones. ResolveIDs() checks each resolved name
--- against the expected name and falls back to matching bag items by name when
--- an ID turns out to be wrong on this client.
-local R = {
-    roughStone      = { id = 2835,  name = "Rough Stone" },
-    copperBar       = { id = 2840,  name = "Copper Bar" },
-    peacebloom      = { id = 2447,  name = "Peacebloom" },
-    emptyVial       = { id = 3371,  name = "Empty Vial" },
-    boltOfLinen     = { id = 2996,  name = "Bolt of Linen Cloth" },
-    coarseThread    = { id = 2320,  name = "Coarse Thread" },
-    simpleWood      = { id = 4470,  name = "Simple Wood" },
-    strangeDust     = { id = 10940, name = "Strange Dust" },
-    silverleaf      = { id = 765,   name = "Silverleaf" },
-    lightLeather    = { id = 2318,  name = "Light Leather" },
-    linenBandage    = { id = 1251,  name = "Linen Bandage" },
-    springWater     = { id = 159,   name = "Refreshing Spring Water" },
-    smallfish       = { id = 6291,  name = "Raw Brilliant Smallfish" },
-    flintAndTinder  = { id = 4471,  name = "Flint and Tinder" },
+-- Professions by skill line id: GetProfessionInfo returns the same number in
+-- every client language, unlike the profession name.
+Data.PROF_SKILL_LINE = {
+    Mining = 186,
+    Blacksmithing = 164,
+    Alchemy = 171,
+    Tailoring = 197,
+    Enchanting = 333,
+    Herbalism = 182,
+    Skinning = 393,
+    Leatherworking = 165,
+    Engineering = 202,
+    ["First Aid"] = 129,
+    Fishing = 356,
+    Cooking = 185,
 }
-
-local function reagent(entry, count)
-    return { itemID = entry.id, name = entry.name, count = count or 1 }
-end
 
 -- Fallback icons only. The real item icon replaces them as soon as the item
 -- data resolves: live trainer art wins over anything we guess here.
@@ -61,126 +54,69 @@ local PROF_ICON = {
 }
 Data.PROF_ICON = PROF_ICON
 
--- Tier 1 is from live beta tooltips (17-18 Sep 2026). Tiers 2 and 3 are names
--- and skill levels only: reagents, spell IDs and effects are unconfirmed, and
--- those recipes come from Blueprints that drop from dungeon bosses.
+-- The hand-written half of the catalog: what each object is called, where it
+-- belongs and what the game cannot tell us. Ids, skill, tier, reagents and
+-- effects come from Harvested.lua (scripts/build_catalog.py). Higher tiers
+-- "provide all the benefits" of the first one, so they share its exclusive
+-- class buff.
 Data.objects = {
+    { key = "lodestone", name = "Lodestone", profession = "Mining", exclusive = "Blessing of Might" },
+    { key = "rock_garden", name = "Rock Garden", profession = "Mining", exclusive = "Blessing of Might" },
+    { key = "molten_foundry", name = "Molten Foundry", profession = "Mining", exclusive = "Blessing of Might" },
+
+    { key = "sharpening_wheel", name = "Sharpening Wheel", profession = "Blacksmithing", exclusive = "Strength of Earth Totem" },
+    { key = "anvil", name = "Anvil", profession = "Blacksmithing", exclusive = "Strength of Earth Totem" },
+    { key = "master_forge", name = "Master Forge", profession = "Blacksmithing", exclusive = "Strength of Earth Totem" },
+
+    { key = "mana_well", name = "Mana Well", profession = "Alchemy", exclusive = "Blessing of Wisdom" },
+    { key = "fermenter", name = "Fermenter", profession = "Alchemy", exclusive = "Blessing of Wisdom" },
+    -- Announced, not in the Forever database yet: no recipe data.
+    { key = "alchemy_laboratory", name = "Alchemy Laboratory", profession = "Alchemy", tier = 3, skill = 300, unconfirmed = true },
+
+    { key = "faction_banner", name = "Faction Banner", profession = "Tailoring", exclusive = "Divine Spirit" },
+    { key = "spinning_wheel", name = "Spinning Wheel", profession = "Tailoring", exclusive = "Divine Spirit" },
+    { key = "loom", name = "Loom", profession = "Tailoring", exclusive = "Divine Spirit" },
+
+    { key = "enchanted_lute", name = "Enchanted Lute", profession = "Enchanting", exclusive = "Mark of the Wild" },
+    { key = "arcane_salvager", name = "Arcane Salvager", profession = "Enchanting", exclusive = "Mark of the Wild" },
+    { key = "arcane_forge", name = "Arcane Forge", profession = "Enchanting", exclusive = "Mark of the Wild" },
+
+    { key = "incense_candle", name = "Incense Candle", profession = "Herbalism", exclusive = "Arcane Intellect" },
+    { key = "greenhouse", name = "Greenhouse", profession = "Herbalism", exclusive = "Arcane Intellect" },
+    { key = "seed_hybridizer", name = "Seed Hybridizer", profession = "Herbalism", exclusive = "Arcane Intellect" },
+
+    { key = "camp_chair", name = "Camp Chair", profession = "Skinning", exclusive = "Moonkin Aura" },
+    { key = "field_guide", name = "Field Guide", profession = "Skinning", exclusive = "Moonkin Aura" },
+    { key = "trappers_workbench", name = "Trapper's Workbench", profession = "Skinning", exclusive = "Moonkin Aura" },
+
+    { key = "camp_tent", name = "Camp Tent", profession = "Leatherworking" },
+    { key = "tanning_rack", name = "Tanning Rack", profession = "Leatherworking" },
+    { key = "sewing_machine", name = "Sewing Machine", profession = "Leatherworking" },
+
+    { key = "reagent_bot", name = "Reagent Bot", profession = "Engineering" },
+    { key = "repair_bot", name = "Repair Bot", profession = "Engineering" },
+    { key = "anarchists_workbench", name = "Anarchist's Workbench", profession = "Engineering" },
+
+    { key = "first_aid_kit", name = "First Aid Kit", profession = "First Aid", exclusive = "Power Word: Fortitude" },
+    { key = "toxin_study", name = "Toxin Study", profession = "First Aid", exclusive = "Power Word: Fortitude" },
+    { key = "plague_doctors_laboratory", name = "Plague Doctor's Laboratory", profession = "First Aid", exclusive = "Power Word: Fortitude" },
+
+    { key = "fish_bowl", name = "Fish Bowl", profession = "Fishing", exclusive = "Blessing of Kings" },
+    { key = "fishing_rack", name = "Fishing Rack", profession = "Fishing", exclusive = "Blessing of Kings" },
+    { key = "fishing_hut", name = "Fishing Hut", profession = "Fishing", exclusive = "Blessing of Kings" },
+
     {
-        key = "lodestone", name = "Lodestone", profession = "Mining", tier = 1, skill = 20,
-        spellID = 1230161, itemID = nil, creates = 2,
-        icon = "Interface\\Icons\\INV_Misc_Rune_06",
-        effect = "+12 melee Attack Power to everyone sitting nearby",
-        exclusive = "Blessing of Might",
-        reagents = { reagent(R.roughStone), reagent(R.copperBar) },
-        verified = true,
-    },
-    {
-        key = "sharpening_wheel", name = "Sharpening Wheel", profession = "Blacksmithing", tier = 1, skill = 20,
-        effect = "+6 Strength to everyone sitting nearby",
-        exclusive = "Strength of Earth Totem",
-        reagents = { reagent(R.roughStone), reagent(R.copperBar) },
-        verified = true,
-    },
-    {
-        key = "mana_well", name = "Mana Well", profession = "Alchemy", tier = 1, skill = 20,
-        effect = "+10 mana every 5 sec to everyone sitting nearby",
-        exclusive = "Blessing of Wisdom",
-        reagents = { reagent(R.peacebloom), reagent(R.emptyVial) },
-        verified = true,
-    },
-    {
-        key = "faction_banner", name = "Faction Banner", profession = "Tailoring", tier = 1, skill = 20,
-        effect = "+14 Spirit to your own faction sitting nearby",
-        exclusive = "Divine Spirit",
-        reagents = { reagent(R.boltOfLinen), reagent(R.coarseThread) },
-        verified = true,
-    },
-    {
-        key = "enchanted_lute", name = "Enchanted Lute", profession = "Enchanting", tier = 1, skill = 20,
-        effect = "+28 Armor to everyone sitting nearby",
-        exclusive = "Mark of the Wild",
-        reagents = { reagent(R.simpleWood), reagent(R.strangeDust) },
-        verified = true,
-    },
-    {
-        key = "incense_candle", name = "Incense Candle", profession = "Herbalism", tier = 1, skill = 20,
-        effect = "+2 Intellect to everyone sitting nearby",
-        exclusive = "Arcane Intellect",
-        reagents = { reagent(R.peacebloom), reagent(R.silverleaf) },
-        verified = true,
-    },
-    {
-        key = "camp_chair", name = "Camp Chair", profession = "Skinning", tier = 1, skill = 20,
-        effect = "+2% critical strike (spells and attacks) to everyone sitting nearby",
-        exclusive = "Moonkin Aura",
-        reagents = { reagent(R.lightLeather, 3), reagent(R.simpleWood, 2) },
-        verified = true,
-    },
-    {
-        key = "first_aid_kit", name = "First Aid Kit", profession = "First Aid", tier = 1, skill = 20,
-        effect = "+3 Stamina to everyone sitting nearby",
-        exclusive = "Power Word: Fortitude",
-        reagents = { reagent(R.linenBandage, 3), reagent(R.springWater) },
-        verified = true,
-    },
-    {
-        key = "camp_tent", name = "Camp Tent", profession = "Leatherworking", tier = 1, skill = 20,
-        effect = "Raises Rested experience to 5% of a level",
-        reagents = { reagent(R.lightLeather, 5) },
-        verified = true,
-    },
-    {
-        key = "fish_bowl", name = "Fish Bowl", profession = "Fishing", tier = 1, skill = 20,
-        effect = "+8% to all stats for everyone sitting nearby",
-        exclusive = "Blessing of Kings",
-        reagents = { reagent(R.smallfish), reagent(R.emptyVial) },
-        verified = true,
-    },
-    {
-        key = "reagent_bot", name = "Reagent Bot", profession = "Engineering", tier = 1, skill = 20,
-        effect = "Reagent vendor at the camp",
-        reagents = {},
-        verified = false, -- reagents not seen yet
-    },
-    {
-        key = "basic_campfire", name = "Basic Campfire Kit", profession = "Cooking", tier = 1, skill = 1,
+        key = "basic_campfire", name = "Basic Campfire Kit", profession = "Cooking",
         isFire = true, -- lights a campsite instead of needing one
         aliases = { "Basic Campfire" }, -- the recipe is the fire, the item is the kit
         -- Tools are required but not consumed, so they never show up in the
-        -- reagent list the client gives us.
+        -- reagent list.
         tools = { { itemID = 4471, name = "Flint and Tinder" } },
-        effect = "Places the campfire itself: up to 3 camp features, sit or craft 1 min for the benefits",
-        reagents = { reagent(R.flintAndTinder), reagent(R.simpleWood, 1) },
-        verified = true,
     },
-
-    -- Tier 2 / tier 3: Blueprint recipes from dungeon bosses. Names and skill
-    -- levels from the Deep Dive recap; everything else still to confirm.
-    { key = "rock_garden", name = "Rock Garden", profession = "Mining", tier = 2, skill = 140, verified = false },
-    { key = "molten_foundry", name = "Molten Foundry", profession = "Mining", tier = 3, skill = 300, verified = false },
-    { key = "anvil", name = "Anvil", profession = "Blacksmithing", tier = 2, skill = 140, verified = false },
-    { key = "master_forge", name = "Master Forge", profession = "Blacksmithing", tier = 3, skill = 300, verified = false },
-    { key = "fermenter", name = "Fermenter", profession = "Alchemy", tier = 2, skill = 140, verified = false },
-    { key = "alchemy_laboratory", name = "Alchemy Laboratory", profession = "Alchemy", tier = 3, skill = 300, verified = false },
-    { key = "spinning_wheel", name = "Spinning Wheel", profession = "Tailoring", tier = 2, skill = 140, verified = false },
-    { key = "loom", name = "Loom", profession = "Tailoring", tier = 3, skill = 300, verified = false },
-    { key = "arcane_salvager", name = "Arcane Salvager", profession = "Enchanting", tier = 2, skill = 140, verified = false },
-    { key = "arcane_forge", name = "Arcane Forge", profession = "Enchanting", tier = 3, skill = 300, verified = false },
-    { key = "greenhouse", name = "Greenhouse", profession = "Herbalism", tier = 2, skill = 140, verified = false },
-    { key = "seed_hybridizer", name = "Seed Hybridizer", profession = "Herbalism", tier = 3, skill = 300, verified = false },
-    { key = "field_guide", name = "Field Guide", profession = "Skinning", tier = 2, skill = 140, verified = false },
-    { key = "trappers_workbench", name = "Trapper's Workbench", profession = "Skinning", tier = 3, skill = 300, verified = false },
-    { key = "tanning_rack", name = "Tanning Rack", profession = "Leatherworking", tier = 2, skill = 140, verified = false },
-    { key = "sewing_machine", name = "Sewing Machine", profession = "Leatherworking", tier = 3, skill = 300, verified = false },
-    { key = "repair_bot", name = "Repair Bot", profession = "Engineering", tier = 2, skill = 140, verified = false },
-    { key = "anarchists_workbench", name = "Anarchist's Workbench", profession = "Engineering", tier = 3, skill = 300, verified = false },
-    { key = "toxin_study", name = "Toxin Study", profession = "First Aid", tier = 2, skill = 140, verified = false },
-    { key = "plague_doctors_laboratory", name = "Plague Doctor's Laboratory", profession = "First Aid", tier = 3, skill = 300, verified = false },
-    { key = "fishing_rack", name = "Fishing Rack", profession = "Fishing", tier = 2, skill = 140, verified = false },
-    { key = "fishing_hut", name = "Fishing Hut", profession = "Fishing", tier = 3, skill = 300, verified = false },
-    { key = "journeyman_campfire", isFire = true, name = "Journeyman Campfire", profession = "Cooking", tier = 2, skill = 140, verified = false },
-    { key = "expert_campfire", isFire = true, name = "Expert Campfire", profession = "Cooking", tier = 3, skill = 220, verified = false },
-    { key = "iron_oven", name = "Iron Oven", profession = "Cooking", tier = 4, skill = 300, verified = false },
+    { key = "journeyman_campfire", name = "Journeyman Campfire Kit", profession = "Cooking", isFire = true, aliases = { "Journeyman Campfire" } },
+    { key = "expert_campfire", name = "Expert Campfire Kit", profession = "Cooking", isFire = true, aliases = { "Expert Campfire" } },
+    { key = "cookies_feast", name = "Cookie's Feast", profession = "Cooking" },
+    { key = "iron_oven", name = "Iron Oven", profession = "Cooking" },
 }
 
 Data.byKey = {}
@@ -189,56 +125,61 @@ function Data:Initialize()
     for _, entry in ipairs(self.objects) do
         entry.reagents = entry.reagents or {}
         entry.icon = entry.icon or PROF_ICON[entry.profession]
+        entry.skillLine = self.PROF_SKILL_LINE[entry.profession]
         self.byKey[entry.key] = entry
     end
     self:MergeHarvested()
     self:ResolveIDs(true)
 end
 
--- Harvested.lua is generated from a real client, so its IDs and reagents win
--- over the hand-written ones. Everything the client cannot tell us (effects,
--- exclusive-with, skill levels) stays in the table above.
+-- Fill each catalog entry from Harvested.lua. The Faction Banner is two
+-- recipes, one per faction, so it takes the one for the player's side.
 function Data:MergeHarvested(source)
     source = source or self.harvested
     if not source then
         return
     end
 
+    local faction = UnitFactionGroup and UnitFactionGroup("player")
     for _, entry in ipairs(self.objects) do
-        local record = source[entry.name]
-        if not record and entry.aliases then
-            for _, alias in ipairs(entry.aliases) do
-                record = record or source[alias]
-            end
+        local record = source[entry.key]
+        if record and record.variants then
+            record = record.variants[faction] or record.variants.Alliance or record.variants.Horde
         end
         if record then
             entry.spellID = record.spellID or entry.spellID
             entry.itemID = record.itemID or entry.itemID
             entry.creates = record.creates or entry.creates
-            if record.reagents and #record.reagents > 0 then
-                entry.reagents = {}
-                for _, r in ipairs(record.reagents) do
-                    table.insert(entry.reagents, { itemID = r.itemID, name = r.name, count = r.count or 1 })
-                end
+            entry.tier = record.tier or entry.tier
+            entry.skill = record.skill or entry.skill
+            entry.effect = record.effect or entry.effect
+            entry.skillLine = record.skillLine or entry.skillLine
+            entry.reagents = {}
+            for _, r in ipairs(record.reagents or {}) do
+                table.insert(entry.reagents, { itemID = r.itemID, name = r.name, count = r.count or 1 })
             end
-            entry.verified = true
         end
     end
 end
 
 -- Every name a recipe can go by: the trainer list shows "Name (Tier I)" and the
--- Cooking kit recipe is the fire, not the item it makes.
+-- Cooking kit recipes are named after the fire, not the kit item.
 function Data:NamesFor(entry)
     local names = { entry.name }
+    if entry.itemName and entry.itemName ~= entry.name then
+        table.insert(names, entry.itemName)
+    end
     for _, alias in ipairs(entry.aliases or {}) do
         table.insert(names, alias)
     end
     return names
 end
 
--- Everything the client can tell us about names, icons and IDs. Safe to call
+-- Everything the client can tell us about names and icons. Safe to call
 -- repeatedly: item and spell data arrive asynchronously. Throttled because the
--- panel refreshes on every bag update.
+-- panel refreshes on every bag update. Ids are not second-guessed here: they
+-- come from the game's own database, and their names are only English there,
+-- so a name mismatch on another client language is expected, not an error.
 function Data:ResolveIDs(force)
     local now = GetTime and GetTime() or 0
     if not force and self.lastResolve and (now - self.lastResolve) < 5 then
@@ -247,75 +188,20 @@ function Data:ResolveIDs(force)
     self.lastResolve = now
 
     local API = ns.API
-
     for _, entry in ipairs(self.objects) do
-        if not entry.spellID then
-            for _, name in ipairs(self:NamesFor(entry)) do
-                entry.spellID = entry.spellID or API.GetSpellIDByName(name)
-            end
-        end
         if entry.spellID and not entry.spellName then
             entry.spellName = API.GetSpellName(entry.spellID)
         end
         if entry.itemID then
+            entry.itemName = entry.itemName or API.GetItemName(entry.itemID)
             local icon = API.GetItemIcon(entry.itemID)
             if icon then
                 entry.icon = icon
             end
         end
         for _, r in ipairs(entry.reagents) do
-            if r.itemID then
-                local name = API.GetItemName(r.itemID)
-                if name and name ~= r.name then
-                    -- The ID points at something else on this client: drop it
-                    -- and let the bag scan find the right one by name.
-                    ns.dprint(("reagent id %d resolved to %q, expected %q"):format(r.itemID, name, r.name))
-                    r.itemID = nil
-                end
-            end
-        end
-    end
-
-    self:ScanBagsForItemIDs()
-end
-
--- Camping objects are consumables in your bags. Learning their item IDs from an
--- actual stack is the most reliable route while datamined IDs keep shifting.
-function Data:ScanBagsForItemIDs()
-    if not (C_Container and C_Container.GetContainerNumSlots) then
-        return
-    end
-
-    local wanted = {}
-    for _, entry in ipairs(self.objects) do
-        if not entry.itemID then
-            wanted[string.lower(entry.name)] = entry
-        end
-        for _, r in ipairs(entry.reagents) do
-            if not r.itemID then
-                wanted[string.lower(r.name)] = r
-            end
-        end
-    end
-    if not next(wanted) then
-        return
-    end
-
-    for bag = 0, (NUM_BAG_SLOTS or 4) do
-        local slots = C_Container.GetContainerNumSlots(bag) or 0
-        for slot = 1, slots do
-            local itemID = C_Container.GetContainerItemID(bag, slot)
-            if itemID then
-                local name = ns.API.GetItemName(itemID)
-                local target = name and wanted[string.lower(name)]
-                if target then
-                    target.itemID = itemID
-                    ns.dprint(("learned item id %d for %s"):format(itemID, name))
-                    if ns.db then
-                        ns.db.harvest.items = ns.db.harvest.items or {}
-                        ns.db.harvest.items[name] = itemID
-                    end
-                end
+            if r.itemID and not r.localName then
+                r.localName = API.GetItemName(r.itemID)
             end
         end
     end

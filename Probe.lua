@@ -245,9 +245,11 @@ function Probe:HarvestTradeSkill(silent)
                 ns.db.harvest.recipes[name] = record
             end
 
-            -- Feed the live catalog straight away.
-            entry.spellID = entry.spellID or recipeID
-            entry.itemID = entry.itemID or record.outputItemID
+            -- Feed the live catalog straight away. The open profession window
+            -- is the ground truth, so it overrides the shipped ids: a beta
+            -- build that renumbers a recipe fixes itself this way.
+            entry.spellID = recipeID
+            entry.itemID = record.outputItemID or entry.itemID
         end
     end
 

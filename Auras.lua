@@ -218,11 +218,15 @@ function Auras:CampBuffState()
 
     local camp = self:ReadCampBenefits()
     if camp then
+        -- English name and the client's own item name, so another client
+        -- language still matches.
         for _, entry in ipairs(ns.Data.objects) do
-            local prefix = string.lower(entry.name) .. ":"
-            for _, line in ipairs(camp.lines) do
-                if string.lower(line):sub(1, #prefix) == prefix then
-                    benefits[entry.key] = { line = line, minutesLeft = camp.minutesLeft }
+            for _, name in ipairs(ns.Data:NamesFor(entry)) do
+                local prefix = string.lower(name) .. ":"
+                for _, line in ipairs(camp.lines) do
+                    if string.lower(line):sub(1, #prefix) == prefix then
+                        benefits[entry.key] = { line = line, minutesLeft = camp.minutesLeft }
+                    end
                 end
             end
         end

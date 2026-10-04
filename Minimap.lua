@@ -9,7 +9,11 @@ local MinimapButton = ns.Minimap
 -- Angles are maths-style: 0 is three o'clock and they grow anticlockwise, so
 -- the default of 180 puts the button at nine o'clock, on the ring.
 local DEFAULT_ANGLE = 180
-local ICON = "Interface/Icons/Spell_Fire_Fire" -- the campfire
+-- The Camp Tent's own icon: says "camp" without being a fire, which Campfire
+-- Tales already uses on the minimap. Read from the item, so it is whatever
+-- this client ships; the fire is only the fallback.
+local ICON_ITEM = 279978
+local ICON_FALLBACK = "Interface/Icons/Spell_Fire_Fire"
 
 local function GetMinimapFrameRadius()
     local width = (Minimap and Minimap:GetWidth()) or 140
@@ -50,7 +54,7 @@ function MinimapButton:Initialize()
 
     local icon = btn:CreateTexture(nil, "BACKGROUND")
     icon:SetSize(20, 20)
-    icon:SetTexture(ICON)
+    icon:SetTexture(ns.API.GetItemIcon(ICON_ITEM) or ICON_FALLBACK)
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     icon:SetPoint("CENTER", 0, 1)
     btn.icon = icon

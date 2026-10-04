@@ -10,15 +10,16 @@
 
 ## What it does
 
-Forever's Camping system gives every profession its own campsite objects: the Mining **Lodestone**, the Blacksmithing **Sharpening Wheel**, the Herbalism **Incense Candle**, the Skinning **Camp Chair** and so on, three per profession at skill 20, 140 and 300. You craft one (it lands in your bags), then use it next to a campfire; after a minute sitting there, everyone at the fire gets the benefits for an hour.
+Forever's Camping system gives every profession its own campsite objects: the Mining **Lodestone**, the Blacksmithing **Sharpening Wheel**, the Herbalism **Incense Candle**, the Skinning **Camp Chair** and so on, up to three per profession as your skill grows (Cooking has five). You craft one (it lands in your bags), then use it next to a campfire; after a minute sitting there, everyone at the fire gets the benefits for an hour.
 
 Fireside keeps all of that in one small panel, one row per profession, tiers left to right:
 
 | Icon | Means |
 |---|---|
 | Gold glow | You can craft it right now |
-| Green glow, pulsing | It is in your bags and a campfire is in range |
+| Green glow, pulsing | It is in your bags and a campfire is in range - click to place it |
 | Green glow, dim | It is in your bags, no campfire nearby |
+| Green glow, steady | A campfire kit you can light here |
 | Red | Materials missing - the tooltip says which |
 | Grey | Not learned yet - the tooltip says at which skill |
 
@@ -29,6 +30,10 @@ The tooltip of every object lists its materials as **have / need**, the tool it 
 - The **minimap button pulses** when you walk into a campsite's range, yours or anybody else's, with a short chime (`/fire sound` to pick it or turn it off).
 - While you wait for the benefits, the panel counts down the minute: **benefits in 48 s**.
 - Afterwards it reads your **Camp Benefits** and names the objects you are carrying, with the minutes left.
+
+### Placing at the fire
+
+Click a green icon and pick the spot on the ground: the object goes up next to the fire. A campfire kit works the same way to light a new camp. Away from a fire - or, for a kit, too close to one - the click tells you why instead of starting a placement the game would drop.
 
 ### Crafting from the panel
 
@@ -44,16 +49,24 @@ Click a gold icon with that profession's window open and it crafts. The client o
 | `/fire minimap on\|off` | Show or hide the minimap button |
 | `/fire sound on\|off\|<n>` | Campfire chime on or off, or pick and preview a sound |
 | `/fire lock`, `/fire resetpos` | Lock the panel, reset panel and minimap button positions |
-| `/fire debug on\|off` | Developer diagnostics (see below) |
+| `/fire log on\|off` | Record what Fireside sees, for bug reports (see below) |
 
 `/fireside` works too.
 
 ## Known limitations
 
-- **Beta settings reset every launch.** The Forever beta writes SavedVariables but never reads them back, so position and options start from the defaults each time. That is the client; it will fix itself when Blizzard fixes the bug.
-- **English client.** Camp Benefits and a few profession checks are matched by name.
-- **Recipe ids come from a harvest.** The client will not resolve a recipe from its name, so ids are taken from an open profession window. The ones already harvested ship in `Harvested.lua`; for the rest, open your profession window once per session and the panel picks them up.
-- **Placing an object from the panel is experimental** and still being verified in game.
+- **Built and tested on an English client.** Professions are recognised by id and object names come from the game, so other client languages should work, but they are untested; effect descriptions are in English.
+- **Recipe data ships with the addon** for every camping object in the game data. If a beta build changes a recipe, open that profession's window once and Fireside reads the live one from there.
+- **The Alchemy Laboratory** has been announced but is not in the game data yet.
+
+## Reporting a problem
+
+1. Type `/fire log on` in game. Fireside starts recording what it sees: every click, craft and placement, the camp auras on you, and any Lua error.
+2. Do what went wrong once more.
+3. Type `/reload` (or log out) so the game writes the file, then send `WTF/Account/<your account>/SavedVariables/Fireside.lua` - attach it to a [GitHub issue](https://github.com/danilomagro/fireside/issues) or a comment on CurseForge.
+4. `/fire log off` when you are done.
+
+The file holds what Fireside recorded plus your character's name, level, class and professions; nothing from chat or from your account.
 
 ## Development
 
@@ -65,7 +78,7 @@ Deploy to a local client:
 
 Then `/reload` in game: `ReloadUI()` is protected on this client, so addon reload buttons do not work.
 
-`/fire debug on` turns on the diagnostics used to build this addon: a probe of the client API, a log of every craft and placement attempt, a harvest of recipes and auras, and a copy of Lua errors - all written to `FiresideDB` on logout. `scripts/bake_harvest.py` turns a harvest into `Harvested.lua`.
+`/fire log on` is also the developer switch: a probe of the client API, a log of every click, craft and placement, a harvest of recipes and auras, and a copy of Lua errors, all written to `FiresideDB`. `scripts/build_catalog.py` builds `Harvested.lua` from `scripts/wowhead_camp_objects.json` (the Wowhead Forever database) and, with `--harvest <file>`, from a live harvest, which wins.
 
 Releases are built by the BigWigs packager on every version tag (`.github/workflows/release.yml`). While WoW: Forever is in beta every file is a Beta: tag `0.1.0-beta1`, `0.1.0-beta2` and so on; plain `1.0.0`-style tags, which make Release files, wait for the game's launch.
 

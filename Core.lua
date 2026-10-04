@@ -106,7 +106,7 @@ local function PrintHelp()
     ns.Print(ns.Accent("/fire minimap on|off") .. " - show or hide the minimap button")
     ns.Print(ns.Accent("/fire sound on|off|<n>") .. " - chime when you reach a campfire, pick the sound")
     ns.Print(ns.Accent("/fire lock") .. " | " .. ns.Accent("/fire resetpos"))
-    ns.Print(ns.Accent("/fire debug on|off") .. " - developer diagnostics")
+    ns.Print(ns.Accent("/fire log on|off") .. " - record what Fireside sees, for bug reports")
     if ns.DEBUG then
         ns.Print(ns.Accent("/fire probe") .. " | " .. ns.Accent("/fire scan") .. " | " .. ns.Accent("/fire auras"))
     end
@@ -179,16 +179,26 @@ local function HandleSlash(msg)
         ns.UI:ApplyPosition()
         ns.Minimap:ResetPosition()
         ns.Print("Panel and minimap button positions reset")
-    elseif cmd == "debug" then
+    elseif cmd == "log" or cmd == "debug" then
+        -- One switch for bug reports: it records what Fireside sees (client
+        -- API, every click, craft and placement, camp auras, Lua errors) into
+        -- the SavedVariables file, which the game writes on /reload or logout.
         if arg == "on" or arg == "off" then
             ns.DEBUG = (arg == "on")
             ns.db.settings.debug = ns.DEBUG
             if ns.DEBUG then
                 InstallErrorRecorder()
+                ns.Probe:Capture()
+                ns.Print("Logging " .. ns.Accent("on") .. ". Reproduce the problem, then type "
+                    .. ns.Accent("/reload") .. " or log out, and send this file:")
+                ns.Print("  " .. ns.Accent("WTF/Account/<your account>/SavedVariables/Fireside.lua"))
+                ns.Print("It stays on until " .. ns.Accent("/fire log off") .. ".")
+            else
+                ns.Print("Logging " .. ns.Accent("off"))
             end
-            ns.Print("Debug " .. ns.Accent(arg == "on" and "enabled" or "disabled"))
         else
-            ns.Print("Usage: " .. ns.Accent("/fire debug on|off"))
+            ns.Print("Logging is " .. ns.Accent(ns.DEBUG and "on" or "off") .. " - "
+                .. ns.Accent("/fire log on|off") .. " to change it.")
         end
     else
         PrintHelp()

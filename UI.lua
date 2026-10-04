@@ -3,7 +3,7 @@ local _, ns = ...
 ns.UI = ns.UI or {}
 local UI = ns.UI
 
-local MAX_TIERS = 4        -- Cooking has four, everyone else three
+local MAX_TIERS = 5        -- Cooking has five objects, everyone else three
 local LABEL_WIDTH = 96
 local ICON_SIZE = 40
 local PADDING = 8
@@ -156,7 +156,7 @@ local function BuildTooltip(button)
     local entry = info.entry
 
     GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
-    GameTooltip:AddLine(entry.name, 1, 0.82, 0)
+    GameTooltip:AddLine(entry.itemName or entry.name, 1, 0.82, 0)
     GameTooltip:AddLine(("%s - Tier %d (skill %d)"):format(entry.profession, entry.tier or 1, entry.skill or 0), 0.6, 0.6, 0.6)
 
     if entry.effect then
@@ -175,7 +175,7 @@ local function BuildTooltip(button)
             local need = r.count or 1
             local enough = have >= need
             GameTooltip:AddDoubleLine(
-                "  " .. r.name,
+                "  " .. (r.localName or r.name),
                 ("%d / %d"):format(have, need),
                 1, 1, 1,
                 enough and 0.4 or 1, enough and 0.9 or 0.3, enough and 0.4 or 0.3
@@ -200,9 +200,13 @@ local function BuildTooltip(button)
         end
     end
 
-    if not entry.verified then
+    if entry.unconfirmed then
         GameTooltip:AddLine(" ")
-        GameTooltip:AddLine("Recipe details not confirmed yet (Blueprint from a dungeon boss).", 0.6, 0.6, 0.6, true)
+        GameTooltip:AddLine("Announced, but not in the game data yet.", 0.6, 0.6, 0.6, true)
+    elseif not entry.spellID then
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine("Recipe not identified yet: open your " .. entry.profession
+            .. " window once and Fireside reads it from there.", 0.6, 0.6, 0.6, true)
     end
 
     if info.count > 0 then
@@ -598,7 +602,7 @@ function UI:UpdateFooter()
     local carried = {}
     for key in pairs(self.campBenefits or {}) do
         local entry = ns.Data.byKey[key]
-        table.insert(carried, entry and entry.name or key)
+        table.insert(carried, entry and (entry.itemName or entry.name) or key)
     end
     if #carried > 0 then
         table.sort(carried)

@@ -143,25 +143,38 @@ function API.HasCampfireNearby(auraName)
     return nil -- unknown: treat as "cannot tell", never as "no fire"
 end
 
--- Professions the character actually has, as a set of lowercased skill names.
+-- Professions the character actually has: a set of skill line ids, which are
+-- the same in every client language, and a set of lowercased names as a
+-- fallback for a client that does not report the skill line.
 function API.GetKnownProfessions()
-    local set = {}
+    local names, lines = {}, {}
     if not (GetProfessions and GetProfessionInfo) then
-        return set, false
+        return names, false, lines
     end
     local ok, a, b, arch, fishing, cooking, firstAid = pcall(GetProfessions)
     if not ok then
-        return set, false
+        return names, false, lines
     end
     for _, index in ipairs({ a, b, arch, fishing, cooking, firstAid }) do
         if index then
-            local ok2, name = pcall(GetProfessionInfo, index)
+            local ok2, name, _, _, _, _, _, skillLine = pcall(GetProfessionInfo, index)
             if ok2 and name then
-                set[string.lower(name)] = true
+                names[string.lower(name)] = true
+            end
+            if ok2 and type(skillLine) == "number" then
+                lines[skillLine] = true
             end
         end
     end
-    return set, true
+    return names, true, lines
+end
+
+-- Whether a catalog entry belongs to one of the player's professions.
+function API.HasProfession(entry, names, lines)
+    if entry.skillLine and next(lines) then
+        return lines[entry.skillLine] == true
+    end
+    return names[string.lower(entry.profession)] == true
 end
 
 -- The spell that opens each profession window. Casting the profession by name
