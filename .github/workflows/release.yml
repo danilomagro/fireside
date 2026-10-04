@@ -8,7 +8,9 @@
 # never mix the two within the Forever flavor: a single Release file would
 # take precedence over newer Betas for users on default app settings.
 #
-# Tags have no "v" so the CurseForge file is named "Fireside 0.1.0-beta1".
+# Tags have no "v" so the CurseForge file is named "Fireside-0.1.0-beta1". The
+# packager turns anything but letters, digits and . _ ! - into "_", spaces
+# included, so the label cannot read "Fireside 0.1.0-beta1".
 #
 # The BigWigs packager reads the game version from "## Interface: 16001" in
 # Fireside.toc, which it maps to the WoW Forever flavor on CurseForge.
@@ -40,4 +42,4 @@ jobs:
 
       - uses: BigWigsMods/packager@v2
         with:
-          args: '-n "{package-name}-{project-version}:{package-name} {project-version}"'
+          args: '-n "{package-name}-{project-version}:{package-name}-{project-version}"'
