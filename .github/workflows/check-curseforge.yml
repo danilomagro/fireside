@@ -1,0 +1,23 @@
+# Manual check that the CF_API_KEY secret is accepted by CurseForge.
+# Run it from the Actions tab (or `gh workflow run check-curseforge.yml`).
+# It prints the HTTP status and the token length, never the token itself:
+# 200 means the release workflow can upload, 401/403 means the secret is
+# wrong or revoked.
+
+name: Check CurseForge token
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask CurseForge for the game version list
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+        run: |
+          echo "token length: ${#CF_API_KEY}"
+          status=$(curl -s -o /dev/null -w "%{http_code}" -H "X-Api-Token: $CF_API_KEY" https://wow.curseforge.com/api/game/versions)
+          echo "game versions endpoint: HTTP $status"
+          test "$status" = "200"
