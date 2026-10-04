@@ -1,10 +1,14 @@
 # Packages the addon and publishes it whenever a version tag is pushed:
-#   git tag 0.1.0 && git push origin 0.1.0
+#   git tag 0.1.0-beta1 && git push origin 0.1.0-beta1
 #
-# Tags have no "v" so the CurseForge file is named "Fireside 0.1.0". The
-# packager derives the file type from the tag: "beta" or "alpha" in it makes
-# a Beta or Alpha file, which the CurseForge app only delivers to users who
-# opted in to those - plain version tags give a Release.
+# Release policy: every file stays Beta while WoW: Forever is in beta, so tag
+# 0.1.0-beta1, 0.1.0-beta2, ... The packager derives the file type from the
+# tag: "beta" in it makes a Beta file. A plain tag (1.0.0) makes a Release -
+# use one only once Forever has launched and the features are verified, and
+# never mix the two within the Forever flavor: a single Release file would
+# take precedence over newer Betas for users on default app settings.
+#
+# Tags have no "v" so the CurseForge file is named "Fireside 0.1.0-beta1".
 #
 # The BigWigs packager reads the game version from "## Interface: 16001" in
 # Fireside.toc, which it maps to the WoW Forever flavor on CurseForge.
