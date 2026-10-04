@@ -91,15 +91,25 @@ function UI:ApplyPosition()
     self.frame:SetPoint(p[1] or "CENTER", UIParent, p[2] or "CENTER", p[3] or 0, p[4] or 120)
 end
 
+-- The panel holds secure buttons, so the game refuses to show or hide it in
+-- combat. Say so instead of failing silently.
+local function BlockedByCombat()
+    if InCombatLockdown() then
+        ns.Print("The panel cannot open or close during combat.")
+        return true
+    end
+    return false
+end
+
 function UI:Show()
-    if self.frame then
+    if self.frame and not BlockedByCombat() then
         self.frame:Show()
         self:Refresh()
     end
 end
 
 function UI:Hide()
-    if self.frame then
+    if self.frame and not BlockedByCombat() then
         self.frame:Hide()
     end
 end
@@ -672,6 +682,9 @@ function UI:OnEvent(event, ...)
             self:SyncWithCampfire()
         end)
     elseif event == "PLAYER_REGEN_ENABLED" then
+        if ns.Minimap and ns.Minimap.OnCombatEnd then
+            ns.Minimap:OnCombatEnd()
+        end
         -- Secure attributes could not be written during combat: redo them now.
         for _, button in ipairs(self.buttons) do
             if button.pendingUpdate and button.info then

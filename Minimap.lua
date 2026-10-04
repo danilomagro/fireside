@@ -40,12 +40,18 @@ function MinimapButton:Initialize()
     end
     settings.minimap.angle = settings.minimap.angle or DEFAULT_ANGLE
 
-    local btn = CreateFrame("Button", "FiresideMinimapButton", Minimap)
+    -- A secure button, so that shift-click can run /reload: ReloadUI() is
+    -- protected for addon code, but /reload from a real click on a secure
+    -- macro is what any action bar macro does. Plain clicks toggle the panel
+    -- from PostClick, which leaves the secure handler alone.
+    local btn = CreateFrame("Button", "FiresideMinimapButton", Minimap, "SecureActionButtonTemplate")
     btn:SetSize(31, 31)
     btn:SetFrameStrata("MEDIUM")
     btn:SetFrameLevel(8)
-    btn:RegisterForClicks("LeftButtonUp")
+    btn:RegisterForClicks("AnyUp", "AnyDown")
     btn:RegisterForDrag("LeftButton")
+    btn:SetAttribute("shift-type1", "macro")
+    btn:SetAttribute("shift-macrotext1", "/reload")
     btn:SetHighlightTexture("Interface/Minimap/UI-Minimap-ZoomButton-Highlight")
 
     local border = btn:CreateTexture(nil, "OVERLAY")
@@ -80,7 +86,13 @@ function MinimapButton:Initialize()
     fade:SetDuration(0.6)
     btn.pulse = pulse
 
+    -- A secure button cannot move during combat: catch up when it ends.
     local function UpdatePosition()
+        if InCombatLockdown() then
+            MinimapButton.pendingPosition = true
+            return
+        end
+        MinimapButton.pendingPosition = nil
         local angle = math.rad(settings.minimap.angle or DEFAULT_ANGLE)
         local radius = settings.minimap.radius or GetDefaultRadius()
         btn:ClearAllPoints()
@@ -113,13 +125,25 @@ function MinimapButton:Initialize()
     end
 
     btn:SetScript("OnDragStart", function(button)
+        if InCombatLockdown() then
+            return
+        end
         button:SetScript("OnUpdate", OnDragUpdate)
     end)
     btn:SetScript("OnDragStop", function(button)
         button:SetScript("OnUpdate", nil)
     end)
 
-    btn:SetScript("OnClick", function()
+    btn:SetScript("PostClick", function(button)
+        if IsShiftKeyDown() then
+            return -- the secure macro is reloading the UI
+        end
+        -- Down and up both arrive: act on the first, skip its twin.
+        local now = GetTime()
+        if button.lastClick and (now - button.lastClick) < 0.6 then
+            return
+        end
+        button.lastClick = now
         ns.UI:Toggle()
     end)
 
@@ -239,6 +263,7 @@ function MinimapButton:ShowTooltip(owner)
 
     GameTooltip:AddLine(" ")
     GameTooltip:AddLine("Click to toggle the panel, drag to move", 0, 1, 0)
+    GameTooltip:AddLine("Shift-click to reload the UI", 0, 1, 0)
     GameTooltip:Show()
 end
 
@@ -247,12 +272,26 @@ function MinimapButton:SetShown(show)
         ns.db.settings.minimap = ns.db.settings.minimap or {}
         ns.db.settings.minimap.show = show and true or false
     end
+    if self.button and InCombatLockdown() then
+        self.pendingShown = true -- applied when combat ends
+        return
+    end
     if self.button then
         if show then
             self.button:Show()
         else
             self.button:Hide()
         end
+    end
+end
+
+function MinimapButton:OnCombatEnd()
+    if self.pendingPosition and self.UpdatePosition then
+        self.UpdatePosition()
+    end
+    if self.pendingShown then
+        self.pendingShown = nil
+        self:SetShown(ns.db.settings.minimap.show)
     end
 end
 
