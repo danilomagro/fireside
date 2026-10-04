@@ -265,6 +265,18 @@ function API.GetSpellBookSpell(index)
     return nil
 end
 
+-- Secure action buttons fire on the edge this CVar picks: key down when it is
+-- set (the Retail default), key up otherwise. Anything that reacts to the
+-- same click has to pick the same edge, or it acts on a click the game ignored.
+function API.UseKeyDown()
+    local get = (C_CVar and C_CVar.GetCVarBool) or GetCVarBool
+    if not get then
+        return false
+    end
+    local ok, value = pcall(get, "ActionButtonUseKeyDown")
+    return (ok and value) and true or false
+end
+
 function ns.IsSecret(value)
     if issecretvalue then
         local ok, secret = pcall(issecretvalue, value)

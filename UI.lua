@@ -364,9 +364,10 @@ function UI:GetButton(index)
 
     button = CreateFrame("Button", "FiresideButton" .. index, self.frame, "SecureActionButtonTemplate")
     button:SetSize(ICON_SIZE, ICON_SIZE)
-    -- Up only: registering both edges fires the secure action and PostClick
-    -- twice per click, which crafts twice.
-    button:RegisterForClicks("AnyUp")
+    -- Both edges: the secure action only runs on the edge ActionButtonUseKeyDown
+    -- picks (key down by default), so an up-only button never places anything.
+    -- PostClick filters to that same edge, so a click still acts once.
+    button:RegisterForClicks("AnyUp", "AnyDown")
 
     button.icon = button:CreateTexture(nil, "ARTWORK")
     button.icon:SetAllPoints()
@@ -399,7 +400,10 @@ function UI:GetButton(index)
     button:SetScript("OnLeave", function()
         GameTooltip:Hide()
     end)
-    button:SetScript("PostClick", function(self)
+    button:SetScript("PostClick", function(self, _, down)
+        if (down and true or false) ~= ns.API.UseKeyDown() then
+            return -- the other edge of the same click
+        end
         local info = self.info
         if not info then
             return

@@ -216,6 +216,9 @@ frame:SetScript("OnEvent", function(_, event, ...)
 
         local getMeta = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
         local version = getMeta and getMeta(addonName, "Version")
+        if version and version:find("@", 1, true) then
+            version = "dev" -- unpackaged copy: the packager fills in the tag
+        end
         ns.Print(addonName .. " " .. (version and (ns.Accent("v" .. version) .. " ") or "") .. "loaded - " .. ns.Accent("/fire"))
         return
     end

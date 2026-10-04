@@ -2,7 +2,7 @@
 ## Title: Fireside
 ## Notes: Your camping objects at a glance: what you can craft, what you are missing, and a minimap alert when a campfire is near.
 ## Author: Azareus
-## Version: 0.1.0
+## Version: @project-version@
 ## SavedVariables: FiresideDB
 ## X-Curse-Project-ID: 1726135
 

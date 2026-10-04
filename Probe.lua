@@ -91,6 +91,7 @@ function Probe:Capture()
         }
     end
 
+    snapshot.useKeyDown = ns.API.UseKeyDown()
     snapshot.spellBook = ns.API.DumpSpellBook()
     snapshot.tradeSkillOpen = ns.UI:IsTradeSkillOpen()
     snapshot.workingPlaceRoute = ns.UI.workingPlaceMode
