@@ -313,6 +313,9 @@ function UI:CraftNow(entry, source)
     end)
 end
 
+-- Down and up of one click land well inside this; two deliberate clicks don't.
+local CLICK_TWIN_WINDOW = 0.6
+
 function UI:GetButton(index)
     local button = self.buttons[index]
     if button then
@@ -357,14 +360,22 @@ function UI:GetButton(index)
     button:SetScript("OnLeave", function()
         GameTooltip:Hide()
     end)
-    button:SetScript("PostClick", function(self, _, down)
-        if (down and true or false) ~= ns.API.UseKeyDown() then
-            return -- the other edge of the same click
+    button:SetScript("PostClick", function(self, mouseButton, down)
+        -- A click arrives twice (down and up). Act on whichever comes first and
+        -- skip its twin: filtering on the "down" argument against the
+        -- ActionButtonUseKeyDown CVar dropped both on this client.
+        local now = GetTime()
+        if self.lastPostClick and (now - self.lastPostClick) < CLICK_TWIN_WINDOW then
+            return
         end
+        self.lastPostClick = now
+
         local info = self.info
         if not info then
             return
         end
+        ns.Probe:LogCraftAttempt(info.entry, "click", ("status=%s down=%s keydown=%s button=%s"):format(
+            tostring(info.status), tostring(down), tostring(ns.API.UseKeyDown()), tostring(mouseButton)))
 
         if info.status == "place" then
             UI:VerifyPlacement(info.entry, info.count)
