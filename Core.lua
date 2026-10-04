@@ -262,6 +262,19 @@ frame:SetScript("OnEvent", function(_, event, ...)
             end
         end
         return
+    elseif event == "UI_ERROR_MESSAGE" then
+        -- The red text the game flashes when it refuses something ("out of
+        -- range", "not ready yet"): in log mode it is the missing half of
+        -- every failed placement or craft.
+        local _, message = ...
+        if ns.DEBUG and ns.db and type(message) == "string" and not ns.IsSecret(message) then
+            ns.db.uiErrors = ns.db.uiErrors or {}
+            table.insert(ns.db.uiErrors, { at = date("%Y-%m-%d %H:%M:%S"), message = message })
+            while #ns.db.uiErrors > 30 do
+                table.remove(ns.db.uiErrors, 1)
+            end
+        end
+        return
     elseif event == "PLAYER_LOGOUT" then
         if ns.DEBUG then
             ns.Probe:Capture() -- last state before the file is written to disk
@@ -286,5 +299,6 @@ ns.SafeRegisterEvent(frame, "TRADE_SKILL_LIST_UPDATE")
 ns.SafeRegisterEvent(frame, "TRADE_SKILL_CLOSE")
 ns.SafeRegisterEvent(frame, "PLAYER_REGEN_ENABLED")
 ns.SafeRegisterEvent(frame, "PLAYER_LOGOUT")
+ns.SafeRegisterEvent(frame, "UI_ERROR_MESSAGE")
 ns.SafeRegisterEvent(frame, "ADDON_ACTION_BLOCKED")
 ns.SafeRegisterEvent(frame, "ADDON_ACTION_FORBIDDEN")

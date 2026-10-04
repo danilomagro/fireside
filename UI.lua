@@ -13,7 +13,7 @@ local FOOTER = 20
 local PANEL_WIDTH = PADDING * 2 + LABEL_WIDTH + MAX_TIERS * ICON_SIZE + (MAX_TIERS - 1) * SPACING
 
 local STATUS_HINT = {
-    place    = "Click to place it at the campfire",
+    place    = "A campfire is within about 100 yards: walk up to it, then click to place it",
     carry    = "In your bags - find a campfire to place it",
     craft    = "Click to craft",
     mats     = "Materials missing",
@@ -237,6 +237,9 @@ local function BuildTooltip(button)
 
     GameTooltip:AddLine(" ")
     GameTooltip:AddLine(info.hint or STATUS_HINT[info.status] or "", 0.6, 0.8, 1)
+    if info.count > 0 and info.canCraft then
+        GameTooltip:AddLine("Right-click to craft another", 0.6, 0.8, 1)
+    end
     if info.status == "place" and info.fireNearby == nil then
         GameTooltip:AddLine("(cannot read the Campfire Nearby buff on this client)", 0.5, 0.5, 0.5)
     end
@@ -327,6 +330,45 @@ function UI:CraftNow(entry, source)
     end)
 end
 
+-- The craft half of a click, left or right: craft with the window open, else
+-- report whether the secure action managed to open it.
+function UI:CraftClick(info)
+    local entry = info.entry
+    local label = entry.itemName or entry.name
+    if not info.canCraft then
+        if not info.known then
+            ns.Print("You have not learned " .. ns.Accent(label) .. " yet.")
+        else
+            local short = {}
+            for _, m in ipairs(info.missing) do
+                table.insert(short, ("%s %d/%d"):format(m.name, m.have, m.need))
+            end
+            ns.Print("Missing for " .. ns.Accent(label) .. ": " .. table.concat(short, ", "))
+        end
+        return
+    end
+
+    if UI:IsTradeSkillOpen() then
+        -- Still inside the click: this is the hardware event CraftRecipe wants.
+        UI:CraftNow(entry, "postclick, window open")
+        return
+    end
+
+    -- The secure action has just tried to open the profession; say what
+    -- happened rather than what should have.
+    ns.Probe:LogCraftAttempt(entry, "open-profession", entry.profession)
+    C_Timer.After(1, function()
+        if UI:IsTradeSkillOpen() then
+            ns.Probe:LogCraftAttempt(entry, "profession-opened", entry.profession)
+            ns.Print(ns.Accent(entry.profession) .. " is open - click " .. ns.Accent(label) .. " again to craft it.")
+        else
+            ns.Probe:LogCraftAttempt(entry, "profession-not-opened", entry.profession)
+            ns.Print("Open your " .. ns.Accent(entry.profession) .. " window, then click "
+                .. ns.Accent(label) .. " again to craft it.")
+        end
+    end)
+end
+
 -- Down and up of one click land well inside this; two deliberate clicks don't.
 local CLICK_TWIN_WINDOW = 0.6
 
@@ -391,7 +433,15 @@ function UI:GetButton(index)
         ns.Probe:LogCraftAttempt(info.entry, "click", ("status=%s down=%s keydown=%s button=%s"):format(
             tostring(info.status), tostring(down), tostring(ns.API.UseKeyDown()), tostring(mouseButton)))
 
+        if mouseButton == "RightButton" then
+            UI:CraftClick(info)
+            return
+        end
+
         if info.status == "place" then
+            local welcoming = ns.Auras:WelcomingSecondsLeft()
+            ns.Probe:LogCraftAttempt(info.entry, "place-click", ("welcoming=%s nearby=%s"):format(
+                tostring(welcoming), tostring(ns.API.HasCampfireNearby(ns.Data.CAMPFIRE_AURA))))
             UI:VerifyPlacement(info.entry, info.count)
             return
         end
@@ -401,34 +451,42 @@ function UI:GetButton(index)
             return
         end
 
-        if info.status ~= "craft" then
-            return
-        end
-
-        local entry = info.entry
-        if UI:IsTradeSkillOpen() then
-            -- Still inside the click: this is the hardware event CraftRecipe wants.
-            UI:CraftNow(entry, "postclick, window open")
-        else
-            -- The secure action has just tried to open the profession; say
-            -- what happened rather than what should have.
-            ns.Probe:LogCraftAttempt(entry, "open-profession", entry.profession)
-            C_Timer.After(1, function()
-                if UI:IsTradeSkillOpen() then
-                    ns.Probe:LogCraftAttempt(entry, "profession-opened", entry.profession)
-                    ns.Print(ns.Accent(entry.profession) .. " is open - click "
-                        .. ns.Accent(entry.itemName or entry.name) .. " again to craft it.")
-                else
-                    ns.Probe:LogCraftAttempt(entry, "profession-not-opened", entry.profession)
-                    ns.Print("Open your " .. ns.Accent(entry.profession) .. " window, then click "
-                        .. ns.Accent(entry.itemName or entry.name) .. " again to craft it.")
-                end
-            end)
+        if info.status == "craft" then
+            UI:CraftClick(info)
         end
     end)
 
     self.buttons[index] = button
     return button
+end
+
+local ACTION_KEYS = { "type", "item", "spell", "macrotext" }
+
+-- Set one button's action. With only suffixed attributes in use, a right click
+-- never falls back to the left button's action.
+local function SetAction(button, suffix, kind, value)
+    for _, key in ipairs(ACTION_KEYS) do
+        button:SetAttribute(key .. suffix, nil)
+    end
+    if kind then
+        button:SetAttribute("type" .. suffix, kind)
+        button:SetAttribute((kind == "macro" and "macrotext" or kind) .. suffix, value)
+    end
+end
+
+-- How a click opens the profession window: a spell from the spellbook if the
+-- client lists one, else "/cast <profession>" with the client's own name for
+-- it, as a macro on a bar would. (An earlier test ruled this out, but it ran
+-- while the button ignored every click.)
+local function OpenerAction(entry)
+    local opener = ns.API.GetProfessionSpells()[string.lower(entry.profession)]
+    if opener and opener.spellID then
+        return "spell", opener.spellID
+    end
+    local localName = ns.API.GetProfessionNameBySkillLine(entry.skillLine)
+    if localName then
+        return "macro", "/cast " .. localName
+    end
 end
 
 local function ApplySecureAction(button, info)
@@ -439,47 +497,30 @@ local function ApplySecureAction(button, info)
     button.pendingUpdate = nil
 
     local entry = info.entry
-    -- Only "place" gets an item action. "carry" means we know there is no fire
-    -- (or, for a kit, that one is too close): using the item would only start
-    -- a placement the game then drops without a word, so PostClick explains.
-    if info.status == "place" then
-        if entry.itemID then
-            local name = entry.itemName or ns.API.GetItemName(entry.itemID) or entry.name
-            entry.itemName = name
-            button:SetAttribute("type", "item")
-            button:SetAttribute("item", name)
-            button:SetAttribute("spell", nil)
-            button:SetAttribute("macrotext", nil)
-            return
-        end
-    elseif info.status == "craft" and not UI:IsTradeSkillOpen() then
-        -- Window closed: the click opens the profession, as a "/cast First Aid"
-        -- macro would, using the client's own name for it. The craft is the
-        -- next click, once the window is up. (An earlier test said this did
-        -- not work, but it ran while the button ignored every click.)
-        local opener = ns.API.GetProfessionSpells()[string.lower(entry.profession)]
-        local localName = ns.API.GetProfessionNameBySkillLine(entry.skillLine)
-        if opener and opener.spellID then
-            button:SetAttribute("type", "spell")
-            button:SetAttribute("spell", opener.spellID)
-            button:SetAttribute("item", nil)
-            button:SetAttribute("macrotext", nil)
-            return
-        elseif localName then
-            button:SetAttribute("type", "macro")
-            button:SetAttribute("macrotext", "/cast " .. localName)
-            button:SetAttribute("item", nil)
-            button:SetAttribute("spell", nil)
-            return
-        end
-    end
-    -- Craft with the window open: PostClick calls CraftRecipe inside the
-    -- click, so the secure action itself does nothing.
+    local windowOpen = UI:IsTradeSkillOpen()
+    SetAction(button, "", nil)
 
-    button:SetAttribute("type", nil)
-    button:SetAttribute("item", nil)
-    button:SetAttribute("spell", nil)
-    button:SetAttribute("macrotext", nil)
+    -- Left click: place what you carry. Only "place" gets an item action:
+    -- "carry" means no fire (or, for a kit, one too close) and the game would
+    -- drop the placement silently, so PostClick explains instead. Carrying
+    -- none, the left click crafts like the right one.
+    if info.status == "place" and entry.itemID then
+        local name = entry.itemName or ns.API.GetItemName(entry.itemID) or entry.name
+        entry.itemName = name
+        SetAction(button, "1", "item", name)
+    elseif info.status == "craft" and not windowOpen then
+        SetAction(button, "1", OpenerAction(entry))
+    else
+        SetAction(button, "1", nil)
+    end
+
+    -- Right click: always craft, so an object you already carry can be made
+    -- again. With the window open PostClick crafts, so no secure action.
+    if info.canCraft and not windowOpen then
+        SetAction(button, "2", OpenerAction(entry))
+    else
+        SetAction(button, "2", nil)
+    end
 end
 
 function UI:GetLabel(index)

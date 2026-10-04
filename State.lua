@@ -46,6 +46,9 @@ function State:Get(entry)
         end
     end
 
+    -- Independent of what you carry: the right click crafts another one.
+    info.canCraft = info.known and #info.missing == 0
+
     if info.count > 0 then
         if info.cooldownStart then
             info.status = "cooldown"
